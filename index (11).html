@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+  <title>Daraz Nepal · Profit & suggested price</title>
+  <!-- Tailwind via CDN + Inter font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      background: linear-gradient(145deg, #f6f8fa 0%, #f0f2f5 100%);
+    }
+    .daraz-badge { background: #f85606; }
+    .daraz-soft-bg { background: rgba(248, 86, 6, 0.05); }
+    .commission-tag { background: #e9eef4; color: #1e293b; }
+    .result-card { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.03); }
+    input[type=number]::-webkit-inner-spin-button { opacity: 0.6; }
+  </style>
+</head>
+<body class="antialiased p-4 md:p-6">
+  <!-- top centered container: no vertical centering, starts at the top -->
+  <div class="max-w-4xl w-full mx-auto pt-2 md:pt-6">
+
+    <!-- header -->
+    <div class="flex items-center gap-2 mb-3">
+      <div class="w-1.5 h-8 daraz-badge rounded-full"></div>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Daraz <span class="text-[#f85606]">Nepal</span> Profit Calculator</h1>
+    </div>
+
+    <!-- main card -->
+    <div class="bg-white/90 backdrop-blur-sm rounded-3xl result-card p-6 md:p-8 border border-white/30">
+
+      <!-- 2 columns: input area + breakdown -->
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+        
+        <!-- LEFT: INPUT & CATEGORY (spans 2) -->
+        <div class="lg:col-span-2 space-y-6">
+          
+          <!-- Product price INR – BLANK by default, no placeholder 1000 -->
+          <div class="bg-gray-50/80 rounded-2xl p-5 border border-gray-100/80">
+            <label class="text-xs uppercase tracking-wider font-semibold text-gray-500 flex items-center gap-1.5 mb-2">
+              <span class="w-1.5 h-1.5 bg-[#f85606] rounded-full"></span>
+              Product price
+            </label>
+            <div class="flex items-baseline gap-2">
+              <span class="text-2xl font-medium text-gray-700">₹</span>
+              <input type="number" id="priceINR" placeholder="0" step="any" min="0"
+                class="w-full text-3xl md:text-4xl font-bold bg-transparent border-0 border-b-2 border-gray-200 focus:border-[#f85606] focus:ring-0 p-0 py-1 outline-none text-gray-800 placeholder:text-gray-300" />
+            </div>
+            <div class="flex justify-between mt-2 text-xs text-gray-400">
+              <span>1 INR = 1.64 NPR</span>
+              <span>🇮🇳 → 🇳🇵</span>
+            </div>
+          </div>
+          
+          <!-- Category dropdown -->
+          <div class="bg-gray-50/80 rounded-2xl p-5 border border-gray-100/80">
+            <label class="text-xs uppercase tracking-wider font-semibold text-gray-500 flex items-center gap-1.5 mb-3">
+              <span class="w-1.5 h-1.5 bg-[#f85606] rounded-full"></span>
+              Select category
+            </label>
+            <select id="categorySelect" class="w-full p-3 pr-8 rounded-xl border-0 bg-white shadow-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-[#f85606] text-gray-700 font-medium cursor-pointer transition-all appearance-none">
+              <!-- populated by JS -->
+            </select>
+            <div id="selectedCommissionBadge" class="mt-3 inline-block px-3 py-1.5 commission-tag rounded-full text-xs font-semibold">
+              Commission: <span id="commissionValue">8.41</span>%
+            </div>
+          </div>
+
+          <!-- delivery note -->
+          <div class="flex items-center gap-2 text-xs text-gray-500 bg-white/50 p-3 rounded-xl">
+            <span class="text-base">📦</span> 
+            <span>NPR 149 delivery fee automatically added</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: LIVE BREAKDOWN + FINAL & SUGGESTED PRICE (spans 3) -->
+        <div class="lg:col-span-3 bg-gradient-to-br from-gray-50 to-white rounded-2xl p-5 md:p-6 border border-gray-100/80 daraz-soft-bg">
+          <h2 class="text-sm uppercase tracking-wider font-semibold text-gray-500 mb-4 flex items-center gap-2">
+            <span class="w-1 h-4 bg-[#f85606] rounded-full"></span>
+            price breakdown · NPR
+          </h2>
+          
+          <!-- breakdown list -->
+          <div class="space-y-3 text-sm md:text-base">
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
+              <span class="text-gray-600">🇮🇳 INR → NPR (×1.64)</span>
+              <span class="font-mono font-medium" id="convertedNPR">0.00</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
+              <span class="text-gray-600">+ 10% import duty</span>
+              <span class="font-mono font-medium" id="dutyAmount">0.00</span>
+            </div>
+            <!-- ★ 15% profit line – both label AND amount bold + orange (#f85606) ★ -->
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
+              <span class="text-[#f85606] font-bold">+ 15% profit</span>
+              <span class="font-mono font-bold text-[#f85606]" id="profitAmount">0.00</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
+              <span class="text-gray-600">subtotal (after profit)</span>
+              <span class="font-mono font-semibold" id="subtotalAfterProfit">0.00</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
+              <span class="text-gray-600 flex items-center gap-1">
+                <span class="inline-block w-2 h-2 rounded-full bg-[#f85606]/60"></span>
+                + commission (<span id="commissionPercentLabel">8.41</span>%)
+              </span>
+              <span class="font-mono font-medium text-[#f85606]" id="commissionAmount">0.00</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
+              <span class="text-gray-600">📬 + delivery fee</span>
+              <span class="font-mono font-medium">149.00</span>
+            </div>
+          </div>
+
+          <!-- ✦ SUGGESTED LISTING PRICE – eye‑catching, round figure ending with 9 ✦ -->
+          <div class="mt-5 flex flex-col items-end">
+            <!-- suggested price badge (above final price) -->
+            <div class="flex items-center justify-end gap-3 mb-2">
+              <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
+                <span class="text-base">✨</span> suggested listing
+              </span>
+              <span class="bg-[#f85606]/10 text-[#f85606] font-extrabold px-4 py-1.5 rounded-full text-sm md:text-base border border-[#f85606]/30 shadow-sm">
+                ₨ <span id="suggestedPrice">0</span>
+              </span>
+            </div>
+            <!-- final listing price (original) -->
+            <span class="text-xs uppercase tracking-wider text-gray-500 mb-1">final listing price (NPR)</span>
+            <div class="text-3xl md:text-4xl font-bold text-[#f85606] bg-white px-5 py-2 rounded-2xl shadow-sm border border-[#f85606]/10">
+              ₨ <span id="finalPriceNPR">0.00</span>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">*use final amount to list on seller portal</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- footnote commissions -->
+    <div class="mt-6 text-xs text-gray-400 text-center border-t border-gray-200/60 pt-5 px-2">
+      <span class="font-medium text-gray-500">⚡ commission rates as per Daraz Nepal <br> ( Made with ❤️ by Merowish Int'l Logistic ) </span>
+      <div class="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 max-w-2xl mx-auto opacity-80">
+        <span>Bedding 8.41%</span> <span>•</span> <span>Furniture 8.41%</span> <span>•</span> <span>DIY 8.41%</span> <span>•</span> 
+        <span>Laundry 9.41%</span> <span>•</span> <span>Kitchen 9.57%</span> <span>•</span> <span>Fashion 15%</span> <span>•</span>
+        <span>Mobiles 12.83%</span> <span>•</span> <span>Cameras 1.27%</span> <span>•</span> <span>Toys 12.18%</span> <span>•</span> +20 more
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      "use strict";
+
+      // ------------------------------------------------------------
+      // 1. CATEGORY DATA – exact from image
+      // ------------------------------------------------------------
+      const categories = [
+        { name: "Bedding & Bath", commission: 8.41 },
+        { name: "Furniture & Decor", commission: 8.41 },
+        { name: "Tools, DIY & Outdoor", commission: 8.41 },
+        { name: "Laundry & Cleaning", commission: 9.41 },
+        { name: "Kitchen & Dining", commission: 9.57 },
+        { name: "Stationery & Craft", commission: 8.41 },
+        { name: "Special Digital Products", commission: 0.00 },
+        { name: "Charity and Donation", commission: 0.00 },
+        { name: "Pet Supplies", commission: 8.41 },
+        { name: "Health & Beauty", commission: 8.41 },
+        { name: "TV, Audio / Video, Gaming & Wearables", commission: 7.91 },
+        { name: "Fashion", commission: 15.00 },
+        { name: "Bags and Travel", commission: 15.00 },
+        { name: "Sports & Outdoors", commission: 8.41 },
+        { name: "Mobiles & Tablets", commission: 12.83 },
+        { name: "Cameras", commission: 1.27 },
+        { name: "Home Appliances", commission: 1.27 },
+        { name: "Motors", commission: 8.41 },
+        { name: "Media, Music & Books", commission: 11.31 },
+        { name: "Groceries", commission: 8.41 },
+        { name: "Computers & Laptops", commission: 1.27 },
+        { name: "Test Product (won't be seen in seller's list)", commission: 8.41 },
+        { name: "Kids' & Baby Fashion", commission: 8.41 },
+        { name: "Digital Goods", commission: 0.00 },
+        { name: "Watches Sunglasses Jewellery", commission: 12.83 },
+        { name: "Mother & Baby", commission: 8.41 },
+        { name: "Toys & Games", commission: 12.18 }
+      ];
+
+      // ------------------------------------------------------------
+      // 2. DOM elements
+      // ------------------------------------------------------------
+      const priceInput = document.getElementById('priceINR');
+      const categorySelect = document.getElementById('categorySelect');
+      const commissionValueSpan = document.getElementById('commissionValue');
+      const commissionPercentLabel = document.getElementById('commissionPercentLabel');
+      
+      // NPR display fields
+      const convertedNPR_El = document.getElementById('convertedNPR');
+      const dutyAmount_El = document.getElementById('dutyAmount');
+      const profitAmount_El = document.getElementById('profitAmount');
+      const subtotalAfterProfit_El = document.getElementById('subtotalAfterProfit');
+      const commissionAmount_El = document.getElementById('commissionAmount');
+      const finalPriceNPR_El = document.getElementById('finalPriceNPR');
+      const suggestedPrice_El = document.getElementById('suggestedPrice');
+
+      // ------------------------------------------------------------
+      // 3. Populate dropdown – first option selected
+      // ------------------------------------------------------------
+      function populateDropdown() {
+        categorySelect.innerHTML = '';
+        categories.forEach((cat, index) => {
+          const option = document.createElement('option');
+          option.value = cat.commission;
+          option.textContent = `${cat.name} (${cat.commission.toFixed(2)}%)`;
+          option.dataset.commission = cat.commission;
+          if (index === 0) option.selected = true;
+          categorySelect.appendChild(option);
+        });
+        const defaultCommission = categories[0].commission;
+        commissionValueSpan.textContent = defaultCommission.toFixed(2);
+        commissionPercentLabel.textContent = defaultCommission.toFixed(2);
+      }
+
+      // ------------------------------------------------------------
+      // 4. Update commission badge on change
+      // ------------------------------------------------------------
+      function updateCommissionBadge() {
+        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+        if (selectedOption) {
+          const commission = parseFloat(selectedOption.value) || 0;
+          commissionValueSpan.textContent = commission.toFixed(2);
+          commissionPercentLabel.textContent = commission.toFixed(2);
+        }
+      }
+
+      // ------------------------------------------------------------
+      // 5. MAIN CALCULATION & SUGGESTED PRICE (ends with 9)
+      // ------------------------------------------------------------
+      function computeAll() {
+        // INR input – blank defaults to 0
+        let inrPrice = parseFloat(priceInput.value);
+        if (isNaN(inrPrice) || inrPrice < 0) inrPrice = 0;
+        
+        const conversionRate = 1.64;
+        const nprBase = inrPrice * conversionRate;
+        const duty = nprBase * 0.10;
+        const afterDuty = nprBase * 1.10;
+        const profit = afterDuty * 0.15;
+        const afterProfit = afterDuty * 1.15;
+
+        let commissionPercent = 8.41;
+        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+        if (selectedOption) {
+          commissionPercent = parseFloat(selectedOption.value) || 0;
+        }
+        
+        const commissionAmount = afterProfit * (commissionPercent / 100);
+        const deliveryFee = 149;
+        const finalPrice = afterProfit + commissionAmount + deliveryFee;
+
+        // ---------- SUGGESTED ROUND FIGURE (ending in 9) ----------
+        let suggested = 0;
+        if (finalPrice > 0) {
+          suggested = Math.ceil(finalPrice / 10) * 10 - 1;
+        }
+        if (suggested < 0) suggested = 0;
+
+        // ----- FORMATTERS -----
+        const twoDecimalFormatter = new Intl.NumberFormat('en-IN', { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        });
+        const integerFormatter = new Intl.NumberFormat('en-IN', { 
+          maximumFractionDigits: 0 
+        });
+
+        // update all breakdowns
+        convertedNPR_El.textContent = twoDecimalFormatter.format(nprBase);
+        dutyAmount_El.textContent = twoDecimalFormatter.format(duty);
+        profitAmount_El.textContent = twoDecimalFormatter.format(profit);
+        subtotalAfterProfit_El.textContent = twoDecimalFormatter.format(afterProfit);
+        commissionAmount_El.textContent = twoDecimalFormatter.format(commissionAmount);
+        finalPriceNPR_El.textContent = twoDecimalFormatter.format(finalPrice);
+        
+        // suggested price – integer, no decimals
+        suggestedPrice_El.textContent = integerFormatter.format(suggested);
+      }
+
+      // ------------------------------------------------------------
+      // 6. Event listeners
+      // ------------------------------------------------------------
+      function bindEvents() {
+        priceInput.addEventListener('input', computeAll);
+        priceInput.addEventListener('keyup', computeAll);
+        priceInput.addEventListener('change', computeAll);
+        
+        categorySelect.addEventListener('change', function() {
+          updateCommissionBadge();
+          computeAll();
+        });
+
+        // initial update (blank input = 0, everything 0)
+        updateCommissionBadge();
+        computeAll();
+      }
+
+      // ------------------------------------------------------------
+      // 7. GO
+      // ------------------------------------------------------------
+      populateDropdown();
+      bindEvents();
+
+    })();
+  </script>
+  <noscript>JavaScript required for calculation</noscript>
+</body>
+</html>
