@@ -2,12 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
-  <title>Daraz Nepal · Profit & suggested price</title>
-  <!-- Tailwind via CDN + Inter font -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>Daraz Nepal · Full‑fee Calculator + Net Profit</title>
+  <!-- Tailwind + Inter -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
     body {
       font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
       background: linear-gradient(145deg, #f6f8fa 0%, #f0f2f5 100%);
@@ -17,300 +20,408 @@
     .commission-tag { background: #e9eef4; color: #1e293b; }
     .result-card { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.03); }
     input[type=number]::-webkit-inner-spin-button { opacity: 0.6; }
+    .summary-highlight { background: linear-gradient(135deg, #fef9f5 0%, #fff8f2 100%); }
+    
+    /* better touch & mobile spacing */
+    @media (max-width: 640px) {
+      .mobile-stack {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .mobile-padding {
+        padding: 1rem;
+      }
+      select, input {
+        font-size: 16px; /* prevents zoom on iOS */
+      }
+    }
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+    }
   </style>
 </head>
-<body class="antialiased p-4 md:p-6">
-  <!-- top centered container: no vertical centering, starts at the top -->
-  <div class="max-w-4xl w-full mx-auto pt-2 md:pt-6">
+<body class="antialiased p-3 sm:p-4 md:p-6 safe-bottom">
 
-    <!-- header -->
-    <div class="flex items-center gap-2 mb-3">
-      <div class="w-1.5 h-8 daraz-badge rounded-full"></div>
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Daraz <span class="text-[#f85606]">Nepal</span> Profit Calculator</h1>
-    </div>
+<div class="max-w-6xl w-full mx-auto pt-1 sm:pt-2 md:pt-6">
+  
+  <!-- header - more compact on mobile -->
+  <div class="flex items-center gap-2 mb-2 sm:mb-3">
+    <div class="w-1.5 h-6 sm:h-8 daraz-badge rounded-full"></div>
+    <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
+      Daraz <span class="text-[#f85606]">Nepal</span> · Profit Calculator
+    </h1>
+  </div>
 
-    <!-- main card -->
-    <div class="bg-white/90 backdrop-blur-sm rounded-3xl result-card p-6 md:p-8 border border-white/30">
-
-      <!-- 2 columns: input area + breakdown -->
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+  <!-- main card with better responsive spacing -->
+  <div class="bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl result-card p-4 sm:p-5 md:p-8 border border-white/30">
+    
+    <!-- grid: full width on mobile, side-by-side on large -->
+    <div class="flex flex-col lg:flex-row gap-5 lg:gap-8">
+      
+      <!-- LEFT: INPUT & CATEGORY (full width, then 2/5 on desktop) -->
+      <div class="w-full lg:w-2/5 space-y-5">
         
-        <!-- LEFT: INPUT & CATEGORY (spans 2) -->
-        <div class="lg:col-span-2 space-y-6">
-          
-          <!-- Product price INR – BLANK by default, no placeholder 1000 -->
-          <div class="bg-gray-50/80 rounded-2xl p-5 border border-gray-100/80">
-            <label class="text-xs uppercase tracking-wider font-semibold text-gray-500 flex items-center gap-1.5 mb-2">
-              <span class="w-1.5 h-1.5 bg-[#f85606] rounded-full"></span>
-              Product price
-            </label>
-            <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-medium text-gray-700">₹</span>
-              <input type="number" id="priceINR" placeholder="0" step="any" min="0"
-                class="w-full text-3xl md:text-4xl font-bold bg-transparent border-0 border-b-2 border-gray-200 focus:border-[#f85606] focus:ring-0 p-0 py-1 outline-none text-gray-800 placeholder:text-gray-300" />
-            </div>
-            <div class="flex justify-between mt-2 text-xs text-gray-400">
-              <span>1 INR = 1.64 NPR</span>
-              <span>🇮🇳 → 🇳🇵</span>
-            </div>
+        <!-- Product price INR card -->
+        <div class="bg-gray-50/80 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100/80">
+          <label class="text-xs uppercase tracking-wider font-semibold text-gray-500 flex items-center gap-1.5 mb-2">
+            <span class="w-1.5 h-1.5 bg-[#f85606] rounded-full"></span>
+            Product price (INR)
+          </label>
+          <div class="flex items-baseline gap-2">
+            <span class="text-2xl font-medium text-gray-700">₹</span>
+            <input type="number" id="priceINR" placeholder="0" step="any" min="0"
+              class="w-full text-2xl sm:text-3xl md:text-4xl font-bold bg-transparent border-0 border-b-2 border-gray-200 focus:border-[#f85606] focus:ring-0 p-0 py-1 outline-none text-gray-800 placeholder:text-gray-300" />
           </div>
-          
-          <!-- Category dropdown -->
-          <div class="bg-gray-50/80 rounded-2xl p-5 border border-gray-100/80">
-            <label class="text-xs uppercase tracking-wider font-semibold text-gray-500 flex items-center gap-1.5 mb-3">
-              <span class="w-1.5 h-1.5 bg-[#f85606] rounded-full"></span>
-              Select category
-            </label>
-            <select id="categorySelect" class="w-full p-3 pr-8 rounded-xl border-0 bg-white shadow-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-[#f85606] text-gray-700 font-medium cursor-pointer transition-all appearance-none">
-              <!-- populated by JS -->
-            </select>
-            <div id="selectedCommissionBadge" class="mt-3 inline-block px-3 py-1.5 commission-tag rounded-full text-xs font-semibold">
-              Commission: <span id="commissionValue">8.41</span>%
-            </div>
+          <div class="flex justify-between mt-2 text-xs text-gray-400">
+            <span>1 INR = 1.64 NPR</span>
+            <span>🇮🇳 → 🇳🇵</span>
           </div>
-
-          <!-- delivery note -->
-          <div class="flex items-center gap-2 text-xs text-gray-500 bg-white/50 p-3 rounded-xl">
-            <span class="text-base">📦</span> 
-            <span>NPR 149 delivery fee automatically added</span>
+        </div>
+        
+        <!-- Category dropdown -->
+        <div class="bg-gray-50/80 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100/80">
+          <label class="text-xs uppercase tracking-wider font-semibold text-gray-500 flex items-center gap-1.5 mb-3">
+            <span class="w-1.5 h-1.5 bg-[#f85606] rounded-full"></span>
+            Select category
+          </label>
+          <select id="categorySelect" class="w-full p-3 pr-8 rounded-xl border-0 bg-white shadow-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-[#f85606] text-gray-700 font-medium cursor-pointer transition-all appearance-none text-sm sm:text-base">
+            <!-- populated by JS -->
+          </select>
+          <div id="selectedCommissionBadge" class="mt-3 inline-block px-3 py-1.5 commission-tag rounded-full text-xs font-semibold">
+            Commission: <span id="commissionValue">12.36</span>% + 13% VAT
           </div>
         </div>
 
-        <!-- RIGHT: LIVE BREAKDOWN + FINAL & SUGGESTED PRICE (spans 3) -->
-        <div class="lg:col-span-3 bg-gradient-to-br from-gray-50 to-white rounded-2xl p-5 md:p-6 border border-gray-100/80 daraz-soft-bg">
-          <h2 class="text-sm uppercase tracking-wider font-semibold text-gray-500 mb-4 flex items-center gap-2">
+        <!-- fee notes - more compact & scrollable if needed -->
+        <div class="flex flex-col gap-2 text-xs text-gray-500 bg-white/50 p-3 sm:p-4 rounded-xl">
+          <div class="flex items-center gap-2"><span class="text-base">📦</span> Shipping: NPR 265 (fixed)</div>
+          <div class="flex items-center gap-2"><span class="text-base">🛠️</span> Handling: NPR 33.90</div>
+          <div class="flex items-center gap-2"><span class="text-base">💳</span> Payment processing: 2.825% of final</div>
+          <div class="flex items-center gap-2"><span class="text-base">🏷️</span> Co‑funded voucher: 2% of final</div>
+          <div class="flex items-center gap-2"><span class="text-base">🧾</span> GST withholding: 1% of final</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: LIVE BREAKDOWN + FINAL + NET SUMMARY (full width, then 3/5) -->
+      <div class="w-full lg:w-3/5 space-y-5">
+        
+        <!-- Detailed breakdown card - improved mobile typography -->
+        <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100/80 daraz-soft-bg">
+          <h2 class="text-xs sm:text-sm uppercase tracking-wider font-semibold text-gray-500 mb-3 sm:mb-4 flex items-center gap-2">
             <span class="w-1 h-4 bg-[#f85606] rounded-full"></span>
-            price breakdown · NPR
+            detailed breakdown · NPR
           </h2>
           
-          <!-- breakdown list -->
-          <div class="space-y-3 text-sm md:text-base">
-            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
+          <div class="space-y-2.5 text-xs sm:text-sm md:text-base">
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
               <span class="text-gray-600">🇮🇳 INR → NPR (×1.64)</span>
               <span class="font-mono font-medium" id="convertedNPR">0.00</span>
             </div>
-            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
               <span class="text-gray-600">+ 10% Import duty</span>
               <span class="font-mono font-medium" id="dutyAmount">0.00</span>
             </div>
-            <!-- ★ 15% profit line – both label AND amount bold + orange (#f85606) ★ -->
-            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
-              <span class="text-[#f85606] font-bold">+ 20% Profit</span>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
+              <span class="text-[#f85606] font-bold">+ 20% Profit (on cost+duty)</span>
               <span class="font-mono font-bold text-[#f85606]" id="profitAmount">0.00</span>
             </div>
-            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
-              <span class="text-gray-600">subtotal (after profit)</span>
-              <span class="font-mono font-semibold" id="subtotalAfterProfit">0.00</span>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
+              <span class="text-gray-600">Base price (cost + profit)</span>
+              <span class="font-mono font-semibold" id="basePrice">0.00</span>
             </div>
-            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
-              <span class="text-gray-600 flex items-center gap-1">
-                <span class="inline-block w-2 h-2 rounded-full bg-[#f85606]/60"></span>
-                + commission (<span id="commissionPercentLabel">8.41</span>%)
-              </span>
-              <span class="font-mono font-medium text-[#f85606]" id="commissionAmount">0.00</span>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
+              <span class="text-gray-600">Commission (<span id="commissionPercentLabel">12.36</span>%)</span>
+              <span class="font-mono font-medium" id="commissionAmountRaw">0.00</span>
             </div>
-            <div class="flex justify-between items-center py-1 border-b border-gray-100/80">
-              <span class="text-gray-600">📬 + delivery fee</span>
-              <span class="font-mono font-medium">149.00</span>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
+              <span class="text-gray-600 pl-3 sm:pl-4 text-xs">+ 13% VAT on commission</span>
+              <span class="font-mono text-xs sm:text-sm" id="commissionVatAmount">0.00</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
+              <span class="text-gray-600">📬 Shipping fee</span>
+              <span class="font-mono font-medium">265.00</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
+              <span class="text-gray-600">🛠️ Handling fee</span>
+              <span class="font-mono font-medium">33.90</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
+              <span class="text-gray-600">💳 Payment processing (2.825% of final)</span>
+              <span class="font-mono font-medium" id="paymentProcessingFee">0.00</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
+              <span class="text-gray-600">🏷️ Co‑funded voucher (2% of final)</span>
+              <span class="font-mono font-medium" id="voucherFee">0.00</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-gray-100/80 flex-wrap gap-1">
+              <span class="text-gray-600">🧾 GST withholding (1% of final)</span>
+              <span class="font-mono font-medium" id="gstWithholding">0.00</span>
             </div>
           </div>
 
-          <!-- ✦ SUGGESTED LISTING PRICE – eye‑catching, round figure ending with 9 ✦ -->
-          <div class="mt-5 flex flex-col items-end">
-            <!-- suggested price badge (above final price) -->
-            <div class="flex items-center justify-end gap-3 mb-2">
-              <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                <span class="text-base">✨</span> suggested listing
-              </span>
-              <span class="bg-[#f85606]/10 text-[#f85606] font-extrabold px-4 py-1.5 rounded-full text-sm md:text-base border border-[#f85606]/30 shadow-sm">
-                ₨ <span id="suggestedPrice">0</span>
-              </span>
+          <!-- FINAL & SUGGESTED PRICE - stack on mobile -->
+          <div class="mt-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div class="flex flex-col items-start">
+              <span class="text-xs uppercase tracking-wider text-gray-500 mb-1">final listing price (NPR)</span>
+              <div class="text-2xl sm:text-3xl md:text-4xl font-bold text-[#f85606] bg-white px-4 py-2 rounded-2xl shadow-sm border border-[#f85606]/10 inline-block">
+                ₨ <span id="finalPriceNPR">0.00</span>
+              </div>
             </div>
-            <!-- final listing price (original) -->
-            <span class="text-xs uppercase tracking-wider text-gray-500 mb-1">final listing price (NPR)</span>
-            <div class="text-3xl md:text-4xl font-bold text-[#f85606] bg-white px-5 py-2 rounded-2xl shadow-sm border border-[#f85606]/10">
-              ₨ <span id="finalPriceNPR">0.00</span>
+            <div class="flex flex-col items-end sm:items-end">
+              <div class="flex items-center gap-2 flex-wrap justify-end">
+                <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
+                  <span class="text-base">✨</span> suggested listing
+                </span>
+                <span class="bg-[#f85606]/10 text-[#f85606] font-extrabold px-3 py-1.5 rounded-full text-sm sm:text-base border border-[#f85606]/30 shadow-sm whitespace-nowrap">
+                  ₨ <span id="suggestedPrice">0</span>
+                </span>
+              </div>
+              <p class="text-[10px] sm:text-xs text-gray-400 mt-1.5 text-right">*ends with 9 · seller portal</p>
             </div>
-            <p class="text-xs text-gray-400 mt-2">*use Suggested Amount to list on seller portal</p>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- footnote commissions -->
-    <div class="mt-6 text-xs text-gray-400 text-center border-t border-gray-200/60 pt-5 px-2">
-      <span class="font-medium text-gray-500">⚡ commission rates as per Daraz Nepal <br> ( Made with ❤️ by Merowish Int'l Logistic ) </span>
-      <div class="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 max-w-2xl mx-auto opacity-80">
-        <span>Bedding 8.41%</span> <span>•</span> <span>Furniture 8.41%</span> <span>•</span> <span>DIY 8.41%</span> <span>•</span> 
-        <span>Laundry 9.41%</span> <span>•</span> <span>Kitchen 9.57%</span> <span>•</span> <span>Fashion 15%</span> <span>•</span>
-        <span>Mobiles 12.83%</span> <span>•</span> <span>Cameras 1.27%</span> <span>•</span> <span>Toys 12.18%</span> <span>•</span> +20 more
+        <!-- ★ SELLER NET SUMMARY - fully responsive with flex wrap -->
+        <div class="bg-white/80 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-[#f85606]/20 summary-highlight shadow-sm">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-gray-700 mb-3 sm:mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-5 bg-[#f85606] rounded-full"></span>
+            💰 Seller Net Summary
+          </h3>
+          
+          <!-- 2 columns on tablet+, but on mobile it's a single column for readability -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div class="space-y-2">
+              <div class="flex justify-between items-center py-1 flex-wrap gap-1">
+                <span class="text-gray-600">📥 Product Cost (INR→NPR + duty)</span>
+                <span class="font-mono font-medium" id="summaryProductCost">0.00</span>
+              </div>
+              <div class="flex justify-between items-center py-1 flex-wrap gap-1">
+                <span class="text-gray-600">📈 Added Profit (20%)</span>
+                <span class="font-mono font-medium text-[#f85606]" id="summaryAddedProfit">0.00</span>
+              </div>
+              <div class="flex justify-between items-center py-1 border-t border-gray-200 pt-2 flex-wrap gap-1">
+                <span class="font-semibold text-gray-700">💎 Base Price</span>
+                <span class="font-mono font-bold" id="summaryBasePrice">0.00</span>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center py-1 flex-wrap gap-1">
+                <span class="text-gray-600">🧾 Total fees (comm+VAT+ship+…)</span>
+                <span class="font-mono font-medium text-red-500" id="summaryTotalFees">0.00</span>
+              </div>
+              <div class="flex justify-between items-center py-1 flex-wrap gap-1">
+                <span class="text-gray-600">🏷️ Final Listing Price</span>
+                <span class="font-mono font-medium" id="summaryFinalPrice">0.00</span>
+              </div>
+              <div class="flex justify-between items-center py-1 border-t border-gray-200 pt-2 flex-wrap gap-1">
+                <span class="font-semibold text-gray-700">💵 Net Received (after all fees)</span>
+                <span class="font-mono font-bold text-green-600" id="summaryNetReceived">0.00</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Big net profit highlight - responsive padding -->
+          <div class="mt-4 p-3 sm:p-4 bg-white rounded-xl border border-[#f85606]/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">📊</span>
+              <span class="font-bold text-gray-800 text-base sm:text-lg">Net Profit</span>
+              <span class="text-xs text-gray-500 ml-1 hidden sm:inline">(Net received – Product cost)</span>
+            </div>
+            <div class="text-2xl font-extrabold text-[#f85606] whitespace-nowrap">
+              ₨ <span id="summaryNetProfit">0.00</span>
+            </div>
+            <span class="text-xs text-gray-500 sm:hidden">(Net received – Product cost)</span>
+          </div>
+          <p class="text-[10px] sm:text-xs text-gray-400 mt-3 text-right">*Net received = Final price − all fees. Net profit = Net received − (INR cost converted + duty).</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    (function() {
-      "use strict";
+  <!-- footnote commissions - responsive wrapping -->
+  <div class="mt-5 sm:mt-6 text-xs text-gray-400 text-center border-t border-gray-200/60 pt-4 sm:pt-5 px-2">
+    <span class="font-medium text-gray-500">⚡ commission rates (excl. VAT) as per Daraz Nepal <br class="sm:hidden"> (Made with ❤️ by Merowish Int'l Logistic) </span>
+    <div class="flex flex-wrap justify-center gap-x-2 gap-y-1 mt-2 max-w-2xl mx-auto opacity-80 text-[11px] sm:text-xs">
+      <span>Bedding 12.36%</span> <span>•</span> <span>Furniture 11.28%</span> <span>•</span> <span>DIY 10.41%</span> <span>•</span> 
+      <span>Laundry 10.41%</span> <span>•</span> <span>Kitchen 10.57%</span> <span>•</span> <span>Fashion 15%</span> <span>•</span>
+      <span>Mobiles 12.83%</span> <span>•</span> <span>Toys 12.18%</span> <span>•</span> + more
+    </div>
+    <p class="mt-2 text-gray-400/80 text-[10px] sm:text-xs">*Shipping NPR 265 · Handling NPR 33.90 · Payment 2.825% · Voucher 2% · GST 1% · All calculated on final price</p>
+  </div>
+</div>
 
-      // ------------------------------------------------------------
-      // 1. CATEGORY DATA – exact from image
-      // ------------------------------------------------------------
-      const categories = [
-        { name: "Bedding & Bath", commission: 8.41 },
-        { name: "Furniture & Decor", commission: 8.41 },
-        { name: "Tools, DIY & Outdoor", commission: 8.41 },
-        { name: "Laundry & Cleaning", commission: 9.41 },
-        { name: "Kitchen & Dining", commission: 9.57 },
-        { name: "Stationery & Craft", commission: 8.41 },
-        { name: "Special Digital Products", commission: 0.00 },
-        { name: "Charity and Donation", commission: 0.00 },
-        { name: "Pet Supplies", commission: 8.41 },
-        { name: "Health & Beauty", commission: 8.41 },
-        { name: "TV, Audio / Video, Gaming & Wearables", commission: 7.91 },
-        { name: "Fashion", commission: 15.00 },
-        { name: "Bags and Travel", commission: 15.00 },
-        { name: "Sports & Outdoors", commission: 8.41 },
-        { name: "Mobiles & Tablets", commission: 12.83 },
-        { name: "Cameras", commission: 1.27 },
-        { name: "Home Appliances", commission: 1.27 },
-        { name: "Motors", commission: 8.41 },
-        { name: "Media, Music & Books", commission: 11.31 },
-        { name: "Groceries", commission: 8.41 },
-        { name: "Computers & Laptops", commission: 1.27 },
-        { name: "Test Product (won't be seen in seller's list)", commission: 8.41 },
-        { name: "Kids' & Baby Fashion", commission: 8.41 },
-        { name: "Digital Goods", commission: 0.00 },
-        { name: "Watches Sunglasses Jewellery", commission: 12.83 },
-        { name: "Mother & Baby", commission: 8.41 },
-        { name: "Toys & Games", commission: 12.18 }
-      ];
+<script>
+  (function() {
+    "use strict";
 
-      // ------------------------------------------------------------
-      // 2. DOM elements
-      // ------------------------------------------------------------
-      const priceInput = document.getElementById('priceINR');
-      const categorySelect = document.getElementById('categorySelect');
-      const commissionValueSpan = document.getElementById('commissionValue');
-      const commissionPercentLabel = document.getElementById('commissionPercentLabel');
+    // ------------------------------------------------------------
+    // 1. CATEGORY DATA (commission excl. VAT) - UNCHANGED
+    // ------------------------------------------------------------
+    const categories = [
+      { name: "Bedding & Bath", commission: 12.36 },
+      { name: "Furniture & Decor", commission: 11.28 },
+      { name: "Tools, DIY & Outdoor", commission: 10.41 },
+      { name: "Laundry & Cleaning", commission: 10.41 },
+      { name: "Kitchen & Dining", commission: 10.57 },
+      { name: "Stationery & Craft", commission: 10.58 },
+      { name: "Pet Supplies", commission: 10.41 },
+      { name: "Health & Beauty", commission: 12.88 },
+      { name: "TV, Audio / Video, Gaming & Wearables", commission: 12.23 },
+      { name: "Fashion", commission: 15.00 },
+      { name: "Bags and Travel", commission: 15.00 },
+      { name: "Sports & Outdoors", commission: 10.41 },
+      { name: "Mobiles & Tablets", commission: 12.83 },
+      { name: "Motors", commission: 10.41 },
+      { name: "Media, Music & Books", commission: 11.31 },
+      { name: "Kids' & Baby Fashion", commission: 12.41 },
+      { name: "Watches Sunglasses Jewellery", commission: 12.83 },
+      { name: "Mother & Baby", commission: 12.41 },
+      { name: "Toys & Games", commission: 12.18 }
+    ];
+
+    // DOM elements
+    const priceInput = document.getElementById('priceINR');
+    const categorySelect = document.getElementById('categorySelect');
+    const commissionValueSpan = document.getElementById('commissionValue');
+    const commissionPercentLabel = document.getElementById('commissionPercentLabel');
+    
+    // Display fields (breakdown)
+    const convertedNPR_El = document.getElementById('convertedNPR');
+    const dutyAmount_El = document.getElementById('dutyAmount');
+    const profitAmount_El = document.getElementById('profitAmount');
+    const basePrice_El = document.getElementById('basePrice');
+    const commissionAmountRaw_El = document.getElementById('commissionAmountRaw');
+    const commissionVatAmount_El = document.getElementById('commissionVatAmount');
+    const paymentProcessingFee_El = document.getElementById('paymentProcessingFee');
+    const voucherFee_El = document.getElementById('voucherFee');
+    const gstWithholding_El = document.getElementById('gstWithholding');
+    const finalPriceNPR_El = document.getElementById('finalPriceNPR');
+    const suggestedPrice_El = document.getElementById('suggestedPrice');
+
+    // Summary elements
+    const summaryProductCost_El = document.getElementById('summaryProductCost');
+    const summaryAddedProfit_El = document.getElementById('summaryAddedProfit');
+    const summaryBasePrice_El = document.getElementById('summaryBasePrice');
+    const summaryTotalFees_El = document.getElementById('summaryTotalFees');
+    const summaryFinalPrice_El = document.getElementById('summaryFinalPrice');
+    const summaryNetReceived_El = document.getElementById('summaryNetReceived');
+    const summaryNetProfit_El = document.getElementById('summaryNetProfit');
+
+    // Constants (exactly same as original)
+    const CONVERSION_RATE = 1.64;
+    const IMPORT_DUTY_RATE = 0.10;       // 10%
+    const PROFIT_RATE = 0.20;            // 20% on (cost + duty)
+    const VAT_ON_COMMISSION = 0.13;       // 13%
+    const SHIPPING_FEE = 265.00;
+    const HANDLING_FEE = 33.90;
+    const PAYMENT_PROCESSING_RATE = 0.02825; // 2.825%
+    const VOUCHER_RATE = 0.02;            // 2%
+    const GST_WITHHOLDING_RATE = 0.01;     // 1%
+
+    // Populate dropdown
+    function populateDropdown() {
+      categorySelect.innerHTML = '';
+      categories.forEach((cat, index) => {
+        const option = document.createElement('option');
+        option.value = cat.commission;
+        option.textContent = `${cat.name} (${cat.commission.toFixed(2)}%)`;
+        option.dataset.commission = cat.commission;
+        if (index === 0) option.selected = true;
+        categorySelect.appendChild(option);
+      });
+      updateCommissionBadge();
+    }
+
+    function updateCommissionBadge() {
+      const selected = categorySelect.options[categorySelect.selectedIndex];
+      if (selected) {
+        const comm = parseFloat(selected.value) || 0;
+        commissionValueSpan.textContent = comm.toFixed(2);
+        commissionPercentLabel.textContent = comm.toFixed(2);
+      }
+    }
+
+    // MAIN CALCULATION (identical algorithm)
+    function computeAll() {
+      let inrPrice = parseFloat(priceInput.value);
+      if (isNaN(inrPrice) || inrPrice < 0) inrPrice = 0;
       
-      // NPR display fields
-      const convertedNPR_El = document.getElementById('convertedNPR');
-      const dutyAmount_El = document.getElementById('dutyAmount');
-      const profitAmount_El = document.getElementById('profitAmount');
-      const subtotalAfterProfit_El = document.getElementById('subtotalAfterProfit');
-      const commissionAmount_El = document.getElementById('commissionAmount');
-      const finalPriceNPR_El = document.getElementById('finalPriceNPR');
-      const suggestedPrice_El = document.getElementById('suggestedPrice');
+      const nprBase = inrPrice * CONVERSION_RATE;
+      const duty = nprBase * IMPORT_DUTY_RATE;
+      const costAfterDuty = nprBase + duty;
+      const profit = costAfterDuty * PROFIT_RATE;
+      const basePrice = costAfterDuty + profit;
 
-      // ------------------------------------------------------------
-      // 3. Populate dropdown – first option selected
-      // ------------------------------------------------------------
-      function populateDropdown() {
-        categorySelect.innerHTML = '';
-        categories.forEach((cat, index) => {
-          const option = document.createElement('option');
-          option.value = cat.commission;
-          option.textContent = `${cat.name} (${cat.commission.toFixed(2)}%)`;
-          option.dataset.commission = cat.commission;
-          if (index === 0) option.selected = true;
-          categorySelect.appendChild(option);
-        });
-        const defaultCommission = categories[0].commission;
-        commissionValueSpan.textContent = defaultCommission.toFixed(2);
-        commissionPercentLabel.textContent = defaultCommission.toFixed(2);
+      let commissionPercent = categories[0].commission;
+      const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+      if (selectedOption) {
+        commissionPercent = parseFloat(selectedOption.value) || 0;
       }
+      const commissionAmount = basePrice * (commissionPercent / 100);
+      const commissionVat = commissionAmount * VAT_ON_COMMISSION;
+      const totalCommissionCost = commissionAmount + commissionVat;
 
-      // ------------------------------------------------------------
-      // 4. Update commission badge on change
-      // ------------------------------------------------------------
-      function updateCommissionBadge() {
-        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-        if (selectedOption) {
-          const commission = parseFloat(selectedOption.value) || 0;
-          commissionValueSpan.textContent = commission.toFixed(2);
-          commissionPercentLabel.textContent = commission.toFixed(2);
-        }
+      const fixedFees = SHIPPING_FEE + HANDLING_FEE;
+      const percentFeesSum = PAYMENT_PROCESSING_RATE + VOUCHER_RATE + GST_WITHHOLDING_RATE;
+      
+      let finalPrice = 0;
+      if (basePrice + totalCommissionCost + fixedFees > 0) {
+        finalPrice = (basePrice + totalCommissionCost + fixedFees) / (1 - percentFeesSum);
       }
+      
+      const paymentFee = finalPrice * PAYMENT_PROCESSING_RATE;
+      const voucherFee = finalPrice * VOUCHER_RATE;
+      const gstWithholding = finalPrice * GST_WITHHOLDING_RATE;
+      const totalFees = totalCommissionCost + fixedFees + paymentFee + voucherFee + gstWithholding;
+      const netReceived = finalPrice - totalFees;
+      const netProfit = netReceived - costAfterDuty;
 
-      // ------------------------------------------------------------
-      // 5. MAIN CALCULATION & SUGGESTED PRICE (ends with 9)
-      // ------------------------------------------------------------
-      function computeAll() {
-        // INR input – blank defaults to 0
-        let inrPrice = parseFloat(priceInput.value);
-        if (isNaN(inrPrice) || inrPrice < 0) inrPrice = 0;
-        
-        const conversionRate = 1.64;
-        const nprBase = inrPrice * conversionRate;
-        const duty = nprBase * 0.10;
-        const afterDuty = nprBase * 1.10;
-        const profit = afterDuty * 0.20;
-        const afterProfit = afterDuty * 1.15;
-
-        let commissionPercent = 8.41;
-        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-        if (selectedOption) {
-          commissionPercent = parseFloat(selectedOption.value) || 0;
-        }
-        
-        const commissionAmount = afterProfit * (commissionPercent / 100);
-        const deliveryFee = 149;
-        const finalPrice = afterProfit + commissionAmount + deliveryFee;
-
-        // ---------- SUGGESTED ROUND FIGURE (ending in 9) ----------
-        let suggested = 0;
-        if (finalPrice > 0) {
-          suggested = Math.ceil(finalPrice / 10) * 10 - 1;
-        }
+      let suggested = 0;
+      if (finalPrice > 0) {
+        suggested = Math.ceil(finalPrice / 10) * 10 - 1;
         if (suggested < 0) suggested = 0;
-
-        // ----- FORMATTERS -----
-        const twoDecimalFormatter = new Intl.NumberFormat('en-IN', { 
-          minimumFractionDigits: 2, 
-          maximumFractionDigits: 2 
-        });
-        const integerFormatter = new Intl.NumberFormat('en-IN', { 
-          maximumFractionDigits: 0 
-        });
-
-        // update all breakdowns
-        convertedNPR_El.textContent = twoDecimalFormatter.format(nprBase);
-        dutyAmount_El.textContent = twoDecimalFormatter.format(duty);
-        profitAmount_El.textContent = twoDecimalFormatter.format(profit);
-        subtotalAfterProfit_El.textContent = twoDecimalFormatter.format(afterProfit);
-        commissionAmount_El.textContent = twoDecimalFormatter.format(commissionAmount);
-        finalPriceNPR_El.textContent = twoDecimalFormatter.format(finalPrice);
-        
-        // suggested price – integer, no decimals
-        suggestedPrice_El.textContent = integerFormatter.format(suggested);
       }
 
-      // ------------------------------------------------------------
-      // 6. Event listeners
-      // ------------------------------------------------------------
-      function bindEvents() {
-        priceInput.addEventListener('input', computeAll);
-        priceInput.addEventListener('keyup', computeAll);
-        priceInput.addEventListener('change', computeAll);
-        
-        categorySelect.addEventListener('change', function() {
-          updateCommissionBadge();
-          computeAll();
-        });
+      const twoDec = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const intFormat = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
 
-        // initial update (blank input = 0, everything 0)
+      convertedNPR_El.textContent = twoDec.format(nprBase);
+      dutyAmount_El.textContent = twoDec.format(duty);
+      profitAmount_El.textContent = twoDec.format(profit);
+      basePrice_El.textContent = twoDec.format(basePrice);
+      commissionAmountRaw_El.textContent = twoDec.format(commissionAmount);
+      commissionVatAmount_El.textContent = twoDec.format(commissionVat);
+      paymentProcessingFee_El.textContent = twoDec.format(paymentFee);
+      voucherFee_El.textContent = twoDec.format(voucherFee);
+      gstWithholding_El.textContent = twoDec.format(gstWithholding);
+      finalPriceNPR_El.textContent = twoDec.format(finalPrice);
+      suggestedPrice_El.textContent = intFormat.format(suggested);
+
+      summaryProductCost_El.textContent = twoDec.format(costAfterDuty);
+      summaryAddedProfit_El.textContent = twoDec.format(profit);
+      summaryBasePrice_El.textContent = twoDec.format(basePrice);
+      summaryTotalFees_El.textContent = twoDec.format(totalFees);
+      summaryFinalPrice_El.textContent = twoDec.format(finalPrice);
+      summaryNetReceived_El.textContent = twoDec.format(netReceived);
+      summaryNetProfit_El.textContent = twoDec.format(netProfit);
+    }
+
+    // Event binding with debounce for smoother mobile experience (optional)
+    function bindEvents() {
+      priceInput.addEventListener('input', computeAll);
+      priceInput.addEventListener('change', computeAll);
+      categorySelect.addEventListener('change', function() {
         updateCommissionBadge();
         computeAll();
-      }
+      });
+      updateCommissionBadge();
+      computeAll();
+    }
 
-      // ------------------------------------------------------------
-      // 7. GO
-      // ------------------------------------------------------------
-      populateDropdown();
-      bindEvents();
-
-    })();
-  </script>
-  <noscript>JavaScript required for calculation</noscript>
+    populateDropdown();
+    bindEvents();
+  })();
+</script>
+<noscript>JavaScript required for calculation</noscript>
 </body>
 </html>
